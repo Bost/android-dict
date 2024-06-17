@@ -1,0 +1,20 @@
+(ns dict.core
+  #_(:require [clojure.core :refer [def atom reset! get for first second]]))
+
+(def dictionary
+  {:en {"hello" "Hallo" "bonjour" "ahoj"}
+   :de {"Hallo" "hello" "bonjour" "ahoj"}
+   :fr {"bonjour" "hello" "Hallo" "ahoj"}
+   :sk {"ahoj" "hello" "Hallo" "bonjour"}})
+
+(def input-word (atom ""))
+(def translations (atom []))
+
+(defn find-translations [word]
+  (let [results (for [[lang words] dictionary
+                      :when (contains? words word)]
+                  {lang (get words word)})]
+    (reset! translations results)))
+
+(defn search-word []
+  (find-translations @input-word))

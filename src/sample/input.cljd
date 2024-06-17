@@ -1,0 +1,101 @@
+(ns sample.input
+  "Faithful port of https://docs.flutter.dev/cookbook/forms/retrieve-input"
+  (:require ["package:flutter/material.dart" :as m]
+            [cljd.flutter :as f]
+            [cljd.string :as str]
+            [dict.core :refer [input-word
+                               search-word
+                               find-translations
+                               translations search-word]]))
+
+(defn my-custom-form-state [title]
+  (f/widget
+   :context ctx
+   :managed [tc (m/TextEditingController)]
+   (m/Scaffold
+    .appBar (m/AppBar .title (m/Text title))
+    .body
+    (let [form-key (#/(m/GlobalKey m/FormState))]
+      (f/widget
+       :get [m/ScaffoldMessenger]
+       (m/Form .key form-key)
+       (m/Column .crossAxisAlignment m/CrossAxisAlignment.start)
+       .children
+       [(m/TextFormField
+         .validator (fn [value]
+                      (if (str/blank? value)
+                        "Enter some text"
+                        (do
+                          (reset! input-word value)
+                          nil))))
+        (m/Padding .padding (m/EdgeInsets.symmetric .vertical 16.0))
+        (m/ElevatedButton
+         .onPressed
+         (fn []
+           (when (.validate (.-currentState form-key))
+             (.showSnackBar
+              scaffold-messenger
+              (m/SnackBar .content
+                          (m/Text (str "Processing '" @input-word "'"))))
+             nil))
+         .child (m/Text "Submit"))])))))
+
+(defn xmain []
+  (let [title "Retrieve text input"]
+    (m/runApp
+      (m/MaterialApp
+        .title title
+        .home (my-custom-form-state title)))))
+
+(defn main []
+  (let [counter (atom 0)]
+    (let [form-key (#/(m/GlobalKey m/FormState))]
+      (f/run
+        (m/MaterialApp
+         .title "Cljd Demo"
+         .theme (m/ThemeData .primarySwatch m/Colors.blue))
+        .home
+        (m/Scaffold
+         .appBar (m/AppBar .title (m/Text "ClojureDart Home Page")))
+        .body
+        (f/widget
+         :get [m/ScaffoldMessenger]
+         (m/Form .key form-key)
+         (m/Column .mainAxisAlignment m/MainAxisAlignment.start)
+         .children
+         [(m/TextFormField
+           .validator (fn [value]
+                        (if (str/blank? value)
+                          "Enter some text"
+                          (do
+                            (reset! input-word value)
+                            nil))))
+          (f/widget
+           ;; :get [m/ScaffoldMessenger]
+           ;; (m/Form .key form-key)
+           (m/FloatingActionButton
+            .onPressed
+            (fn []
+              (when (.validate (.-currentState form-key))
+                (.showSnackBar
+                 scaffold-messenger
+                 (m/SnackBar .content
+                             (m/Text (str "Processing '" @input-word "'"))))
+                nil)) .tooltip "Search")
+           (m/Icon m/Icons.add))
+          (m/ElevatedButton
+           .onPressed
+           (fn []
+             (when (.validate (.-currentState form-key))
+               (.showSnackBar
+                scaffold-messenger
+                (m/SnackBar .content
+                            (m/Text (str "Processing '" @input-word "'"))))
+               #_(m/Text (str "Processing '" @input-word "'"))
+               nil))
+           .child (m/Text "Submit"))
+          (m/Text "Translations:")
+          (f/widget
+           :get {{{:flds [displayLarge]} .-textTheme} m/Theme}
+           :watch [word input-word]
+           (m/Text (str (find-translations word)) .style displayLarge))])))))

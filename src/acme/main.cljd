@@ -1,0 +1,60 @@
+(ns acme.main
+  (:require ["package:flutter/material.dart" :as m]
+            [cljd.flutter :as f]
+            [cljd.string :as str]
+            [dict.core :refer [input-word
+                               find-translations]]))
+
+(defn main
+  "From sample.input"
+  []
+  (let [form-key (#/(m/GlobalKey m/FormState))]
+    (f/run
+      (m/MaterialApp
+       .title "Cljd Demo"
+       .theme (m/ThemeData .primarySwatch m/Colors.blue))
+      .home
+      (m/Scaffold
+       .appBar (m/AppBar .title (m/Text "ClojureDart Home Page")))
+      .body
+      (f/widget
+       :get [m/ScaffoldMessenger]
+       (m/Form .key form-key)
+       (m/Column .mainAxisAlignment m/MainAxisAlignment.start)
+       .children
+       [(m/TextFormField
+         .validator (fn [value]
+                      (if (str/blank? value)
+                        "Enter some text"
+                        (do
+                          (reset! input-word value)
+                          nil))))
+        (f/widget
+         ;; :get [m/ScaffoldMessenger]
+         ;; (m/Form .key form-key)
+         (m/FloatingActionButton
+          .onPressed
+          (fn []
+            (when (.validate (.-currentState form-key))
+              (.showSnackBar
+               scaffold-messenger
+               (m/SnackBar .content
+                           (m/Text (str "Processing '" @input-word "'"))))
+              nil)) .tooltip "Search")
+         (m/Icon m/Icons.add))
+        (m/ElevatedButton
+         .onPressed
+         (fn []
+           (when (.validate (.-currentState form-key))
+             (.showSnackBar
+              scaffold-messenger
+              (m/SnackBar .content
+                          (m/Text (str "Processing '" @input-word "'"))))
+             #_(m/Text (str "Processing '" @input-word "'"))
+             nil))
+         .child (m/Text "Submit"))
+        (m/Text "Translations:")
+        (f/widget
+         :get {{{:flds [displayLarge]} .-textTheme} m/Theme}
+         :watch [word input-word]
+         (m/Text (str (find-translations word)) .style displayLarge))]))))
