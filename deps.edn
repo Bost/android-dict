@@ -4,7 +4,13 @@
         tensegritics/clojuredart
         {:git/url "https://github.com/tensegritics/ClojureDart.git"
          :sha "75665e2018b5c373b2e90d2299579fec7f94b3db"}}
- ;; clean project: `clj -m cljd.build clean` or `flutter clean`
+ ;; Clean the project:
+ ;;     clj -m cljd.build clean             # or: flutter clean
+ ;; Run on android in debug mode:
+ ;;     clj -M:cljd flutter -d <device-id>  # or: flutter run --device-id <...>
+ ;; Deploy (doesn't work yet):
+ ;;     flutter run --release
+ ;;     flutter install --device-id <device-id>
  :aliases {:cljd {:main-opts ["-m" "cljd.build"]}}
  :cljd/opts {:kind :flutter
              :main acme.main}}
