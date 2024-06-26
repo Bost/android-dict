@@ -82,9 +82,9 @@
                    (str "https://en.wiktionary.org/wiki/" word)]
                (print (str "http/get " uri " ..."))
                (http/get (Uri/parse uri))))
-           response-json-fr (response-json :fr word)
-           response-json-de (response-json :de word)
-           response-json-sk (response-json :sk word)
+           ;; response-json-fr (response-json :fr word)
+           ;; response-json-de (response-json :de word)
+           ;; response-json-sk (response-json :sk word)
            ]
    ;; (m/Scaffold .appBar (m/AppBar .title (m/Text "DataTable Sample")))
    ;; .body
