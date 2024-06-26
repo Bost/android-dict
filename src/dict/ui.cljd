@@ -2,36 +2,7 @@
   (:require
    #_["package:flutter/widgets.dart" :as fw]
    ["package:flutter/material.dart" :as m]
-   [cljd.flutter :as f]
-   [dict.core :refer [input-word translations search-word]]))
-
-#_
-(defn main []
-  (m/MaterialApp
-   :home
-   (m/Scaffold
-    :appBar (m/AppBar :title (fw/Text "Multilingual Dictionary"))
-    :body
-    (fw/Center
-     :child
-     (fw/Column
-      :main-axis-alignment :center
-      :children
-      [(m/TextField
-        :decoration (m/InputDecoration :hint-text "Enter a word")
-        :on-changed #(reset! input-word %))
-       (m/ElevatedButton
-        :on-pressed search-word
-        :child (fw/Text "Search"))
-       (fw/Expanded
-        :child
-        (fw/list-view.builder
-         :item-count (count @translations)
-         :item-builder
-         (fn [context index]
-           (fw/ListTile
-            :title (fw/Text (str (first (keys (nth @translations index))) ": "
-                                 (second (vals (nth @translations index))))))))) ])))))
+   [cljd.flutter :as f]))
 
 (defn main []
   (let [title "Retrieve text input"]

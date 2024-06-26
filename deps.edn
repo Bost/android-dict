@@ -4,6 +4,7 @@
         tensegritics/clojuredart
         {:git/url "https://github.com/tensegritics/ClojureDart.git"
          :sha "75665e2018b5c373b2e90d2299579fec7f94b3db"}}
+ ;; clean project: `clj -m cljd.build clean` or `flutter clean`
  :aliases {:cljd {:main-opts ["-m" "cljd.build"]}}
  :cljd/opts {:kind :flutter
              :main acme.main}}

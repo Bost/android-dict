@@ -2,8 +2,115 @@
   (:require ["package:flutter/material.dart" :as m]
             [cljd.flutter :as f]
             [cljd.string :as str]
-            [dict.core :refer [input-word
-                               find-translations]]))
+            [dict.core :as d]
+            [acme.wiktionary :as wiki]
+            [acme.utils :as ut]
+
+            ["package:http/http.dart" :as http]
+            ["package:html/parser.dart" :as html-parser]
+            ["dart:core" :refer [print]]
+            ["dart:convert" :as c]
+
+            ))
+
+(defn data-table [& {:keys [cols rows]}]
+  (f/widget
+   (m/SingleChildScrollView .scrollDirection m/Axis.horizontal)
+   (m/DataTable
+    .headingTextStyle (m/TextStyle
+                       .fontWeight m/FontWeight.bold
+                       .color m/Colors.blue)
+    ;; .columnSpacing 18.0
+    ;; .sortColumnIndex 1 ;; this doesn't work
+    ;; .sortAscending true ;; this doesn't work
+    .showBottomBorder true
+    .columns (for [col cols] (m/DataColumn .label (m/Text col)))
+    .rows (for [row rows]
+            (m/DataRow .cells (for [cell row] (m/DataCell (m/Text cell))))))))
+
+(defn fetch-translation? [word]
+  (and (not (clojure.string/blank? word))
+       (empty? (d/find-translations d/dictionary word))))
+
+(defn json-translation [kw word response-json]
+  (if-some [{sc .-statusCode body .-body} ^http/Response response-json]
+    (case sc
+      200
+      ;; ((comp (fn [document] (wiki/wiktionary-translations document word)))
+      ;;  (html-parser/parse body))
+      (let [pages (get-in (c/json.decode body) ["query" "pages"])
+            kw-fst-page (first (keys pages))
+            fst-page (get-in pages [kw-fst-page])
+            title (get-in fst-page ["title"])
+            iwlinks (get-in fst-page ["iwlinks"])
+            translation ((comp (fn [hm] (get-in hm ["*"])) first) iwlinks)]
+        (print (str 
+                "\n title: " title
+                "\n iwlinks: " iwlinks
+                "\n translation : " 
+                ))
+        {kw [translation]})
+      {:err [(str "Couldn't fetch '" word "', status code: " sc)]})))
+
+(defn response-json [kw word]
+  (when (fetch-translation? word)
+    (print (str "http/get... '" word "'"))
+    (http/get (Uri/parse
+               #_"https://jsonplaceholder.typicode.com/albums/1"
+               (str "https://en.wiktionary.org/w/api.php"
+                    "?action=query"
+                    "&prop=iwlinks"
+                    "&titles=" word
+                    "&iwprop=url&format=json"
+                    "&iwprefix=" (name kw)
+                    #_"&continue=")))))
+(def demo
+  (f/widget
+   :watch [word d/input-word
+           response
+           (when (fetch-translation? word)
+             (print (str "http/get... '" word "'"))
+             (http/get (Uri/parse
+                        #_"https://jsonplaceholder.typicode.com/albums/1"
+                        (str "https://en.wiktionary.org/wiki/" word))))
+           response-json-fr (response-json :fr word)
+           response-json-de (response-json :de word)
+           response-json-sk (response-json :sk word)
+           ]
+   ;; (m/Scaffold .appBar (m/AppBar .title (m/Text "DataTable Sample")))
+   ;; .body
+   (let [results (d/find-translations d/dictionary word)
+         result
+         (do
+           (print (str "(fetch-translation? word): " (fetch-translation? word)))
+           (if (fetch-translation? word)
+             (if (clojure.string/blank? word)
+               (do
+                 (print (str "(clojure.string/blank? word): " (clojure.string/blank? word)))
+                 {})
+               (do
+                 (print (str
+                         "\n de: " (json-translation :de word response-json-de)
+                         "\n de: " (json-translation :fr word response-json-fr)
+                         "\n sk: " (json-translation :sk word response-json-sk)
+                         ))
+                 (if-some [{sc .-statusCode body .-body} ^http/Response response]
+                   (case sc
+                     200
+                     ((comp
+                       (fn [document] (wiki/wiktionary-translations document word)))
+                      (html-parser/parse body))
+                     {:err [(str "Couldn't fetch '" word "', status code: " sc)]}))))
+             (first results)))]
+     (data-table
+      :cols [""]
+      :rows (mapv (fn [e] [(str/join ", " e)]) (vals result))
+      #_
+      [["1" "a" "42" "guangzhou"]
+       ["2" "b" "10" "guangzhou"]
+       ["3" "c" "13" "hongkong"]
+       ["4" "d" "11" "guangzhou"]
+       ["5" "e" "10" "beijing"]]))))
 
 (defn main
   "From sample.input"
@@ -15,7 +122,7 @@
        .theme (m/ThemeData .primarySwatch m/Colors.blue))
       .home
       (m/Scaffold
-       .appBar (m/AppBar .title (m/Text "ClojureDart Home Page")))
+       .appBar (m/AppBar .title (m/Text "ClojureDart")))
       .body
       (f/widget
        :get [m/ScaffoldMessenger]
@@ -23,25 +130,25 @@
        (m/Column .mainAxisAlignment m/MainAxisAlignment.start)
        .children
        [(m/TextFormField
-         .validator (fn [value]
-                      (if (str/blank? value)
-                        "Enter some text"
-                        (do
-                          (reset! input-word value)
-                          nil))))
-        (f/widget
-         ;; :get [m/ScaffoldMessenger]
-         ;; (m/Form .key form-key)
-         (m/FloatingActionButton
-          .onPressed
-          (fn []
-            (when (.validate (.-currentState form-key))
-              (.showSnackBar
-               scaffold-messenger
-               (m/SnackBar .content
-                           (m/Text (str "Processing '" @input-word "'"))))
-              nil)) .tooltip "Search")
-         (m/Icon m/Icons.add))
+         .initialValue "horse"
+         .validator (fn [value] (if (str/blank? value)
+                                  "Enter some text"
+                                  (do (reset! d/input-word value)
+                                      nil))))
+        ;; (f/widget
+        ;;  ;; :get [m/ScaffoldMessenger]
+        ;;  ;; (m/Form .key form-key)
+        ;;  (m/FloatingActionButton
+        ;;   .onPressed
+        ;;   (fn []
+        ;;     (when (.validate (.-currentState form-key))
+        ;;       (.showSnackBar
+        ;;        scaffold-messenger
+        ;;        (m/SnackBar .content
+        ;;                    (m/Text (str "Processing '" @d/input-word "'"))))
+        ;;       nil)) .tooltip "Search")
+        ;;  ;; (m/Icon m/Icons.add)
+        ;;  (m/Text "FloatingActionButton Submit"))
         (m/ElevatedButton
          .onPressed
          (fn []
@@ -49,12 +156,13 @@
              (.showSnackBar
               scaffold-messenger
               (m/SnackBar .content
-                          (m/Text (str "Processing '" @input-word "'"))))
+                          (m/Text (str "Processing '" @d/input-word "'"))))
              #_(m/Text (str "Processing '" @input-word "'"))
              nil))
-         .child (m/Text "Submit"))
-        (m/Text "Translations:")
+         .child (m/Text "m/ElevatedButton Submit"))
+        demo
+        #_
         (f/widget
          :get {{{:flds [displayLarge]} .-textTheme} m/Theme}
-         :watch [word input-word]
-         (m/Text (str (find-translations word)) .style displayLarge))]))))
+         :watch [word d/input-word]
+         (m/Text (str (d/find-translations d/dictionary word)) .style displayLarge))]))))

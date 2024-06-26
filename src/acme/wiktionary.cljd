@@ -1,0 +1,39 @@
+(ns acme.dict
+  (:require ["dart:async" :refer [Future]]
+            ["dart:core" :refer [print]]
+            ["package:http/http.dart" :as http]
+            ["dart:convert" :as c]
+            ["package:html/dom.dart" :as dom]
+            ["package:html/dom_parsing.dart" :as dom-parsing]
+            ["package:html/parser.dart" :as html-parser]
+
+            ["package:flutter/material.dart" :as m]
+            [cljd.flutter :as f]
+            ))
+
+(defn wiktionary-find-translations [doc kw-lang]
+  ;; (print doc)
+  (if-let [element ((comp
+                     (fn [selector] (.querySelector doc selector))
+                     (fn [lang] (str "span[lang='" lang "'] a"))
+                     name)
+                    kw-lang)]
+    (do
+      ;; (print (str "(string? element) " (string? element)))
+      ;; (print (str "element " element))
+      ;; (print (str "(.-attributes element) " (.-attributes element)))
+      ;; (print (str "(.-children element) " (.-children element)))
+      ;; {kw-lang (.-nodes element)}
+      {kw-lang [(.-text element)]})
+    nil))
+
+(defn wiktionary-translations [doc word]
+  ((comp
+    (partial reduce into {:en [word]})
+    (partial remove nil?)
+    (partial map (partial wiktionary-find-translations doc))
+    keys)
+   {:de "German" :fr "French"
+    ;; :cs "Czech"
+    :sk "Slovak"}))
+

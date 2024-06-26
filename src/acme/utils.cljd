@@ -1,0 +1,94 @@
+(ns acme.utils
+  "See https://github.com/weavejester/medley/blob/master/src/medley/core.cljc"
+  (:require
+   [clojure.string :as cstr]
+   ))
+
+(defn coll?--and--empty?    [v] (and (coll? v) (empty? v)))
+(defn if-coll?-then-count   [v] (when (coll? v) (count v)))
+
+(defn what-is
+  [unknown]
+  (->>
+   #_[(fn coll?--count [v] (if (coll? v) (count v)))]
+   [
+    #_(fn [n] (if (clojure.zip/node n) (clojure.zip/branch? n)))
+    #_clojure.zip/end?
+
+    ;; seq
+    boolean
+    ;; type
+    coll?
+
+    ;; coll?--and--not-empty
+    coll?--and--empty?
+    if-coll?-then-count
+
+    ;; Use of undeclared Var utils.core/future?
+    ;; future?
+    ;; (fn future?--and--future-done? [f]
+    ;;   (and
+    ;;    ;; Use of undeclared Var utils.core/future?
+    ;;    (future? f)
+    ;;    ;; Use of undeclared Var utils.core/future-done?
+    ;;    (future-done? f)))
+    ;; (fn future?--and--future-cancelled? [f]
+    ;;   (and
+    ;;    ;; Use of undeclared Var utils.core/future?
+    ;;    (future? f)
+    ;;    ;; Use of undeclared Var utils.core/future-cancelled?
+    ;;    (future-cancelled? f)))
+    ;; (fn future?--and--realized? [f]
+    ;;   (and
+    ;;    ;; Use of undeclared Var utils.core/future?
+    ;;    (future? f) (realized? f)))
+
+    distinct?
+    sequential? associative?
+    ;; sorted?
+    counted?
+    ;; reversible?
+    ;; Use of undeclared Var utils.core/bytes?
+    ;; bytes?
+    indexed? seqable?
+    any?
+    fn?
+    ifn?
+    ;; var?
+    ;; Use of undeclared Var utils.core/bound?
+    ;; (fn var?--and--bount? [v] (and (var? v) (bound? v)))
+    ;; (fn var?--and--bount?--and-thread-bound? [v]
+    ;;   (and (var? v)
+    ;;        ;; Use of undeclared Var utils.core/bound?
+    ;;        (bound? v)
+    ;;        ;; Use of undeclared Var utils.core/thread-bound?
+    ;;        (thread-bound? v)))
+    list?
+
+    vector? set? map? seq? record? map-entry?
+    ;; Use of undeclared Var utils.core/class?
+    ;; class?
+    volatile?
+    number?
+    (fn number?--and--zero? [n] (and (number? n) (zero? n)))
+    true? false? nil? some?
+    string?
+    (fn string?--and--blank? [s] (and (string? s) (cstr/blank? s)))
+    ;; No such namespace: clojure.spec.alpha, could not locate clojure/spec/alpha.cljs, clojure/spec/alpha.cljc, or JavaScript source providing "clojure.spec.alpha" ;; Use of undeclared Var clojure.spec.alpha/spec?
+    ;; clojure.spec.alpha/spec?
+    ;; special-symbol?
+    ;; Use of undeclared Var utils.core/rational?
+    ;; rational?
+    integer?
+    ;; Use of undeclared Var utils.core/ratio?
+    ;; ratio?
+    ;; Use of undeclared Var utils.core/decimal?
+    ;; decimal?
+    ;; float? double? int? nat-int? neg-int?
+    pos-int? keyword? symbol? ident? qualified-ident? qualified-keyword?
+    qualified-symbol? simple-ident? simple-keyword? simple-symbol? boolean?
+    inst? uri? uuid?
+    ]
+   (keep (fn [test-fn]
+           (if-let [result (test-fn unknown)]
+             {test-fn result})))))

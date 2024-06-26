@@ -3,10 +3,7 @@
   (:require ["package:flutter/material.dart" :as m]
             [cljd.flutter :as f]
             [cljd.string :as str]
-            [dict.core :refer [input-word
-                               search-word
-                               find-translations
-                               translations search-word]]))
+            [dict.core :as d]))
 
 (defn my-custom-form-state [title]
   (f/widget
@@ -26,7 +23,7 @@
                       (if (str/blank? value)
                         "Enter some text"
                         (do
-                          (reset! input-word value)
+                          (reset! d/input-word value)
                           nil))))
         (m/Padding .padding (m/EdgeInsets.symmetric .vertical 16.0))
         (m/ElevatedButton
@@ -36,7 +33,7 @@
              (.showSnackBar
               scaffold-messenger
               (m/SnackBar .content
-                          (m/Text (str "Processing '" @input-word "'"))))
+                          (m/Text (str "Processing '" @d/input-word "'"))))
              nil))
          .child (m/Text "Submit"))])))))
 
@@ -68,7 +65,7 @@
                         (if (str/blank? value)
                           "Enter some text"
                           (do
-                            (reset! input-word value)
+                            (reset! d/input-word value)
                             nil))))
           (f/widget
            ;; :get [m/ScaffoldMessenger]
@@ -80,7 +77,7 @@
                 (.showSnackBar
                  scaffold-messenger
                  (m/SnackBar .content
-                             (m/Text (str "Processing '" @input-word "'"))))
+                             (m/Text (str "Processing '" @d/input-word "'"))))
                 nil)) .tooltip "Search")
            (m/Icon m/Icons.add))
           (m/ElevatedButton
@@ -90,12 +87,12 @@
                (.showSnackBar
                 scaffold-messenger
                 (m/SnackBar .content
-                            (m/Text (str "Processing '" @input-word "'"))))
+                            (m/Text (str "Processing '" @d/input-word "'"))))
                #_(m/Text (str "Processing '" @input-word "'"))
                nil))
            .child (m/Text "Submit"))
           (m/Text "Translations:")
           (f/widget
            :get {{{:flds [displayLarge]} .-textTheme} m/Theme}
-           :watch [word input-word]
-           (m/Text (str (find-translations word)) .style displayLarge))])))))
+           :watch [word d/input-word]
+           (m/Text (str (d/find-translations d/dictionary word)) .style displayLarge))])))))

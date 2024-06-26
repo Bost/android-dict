@@ -1,20 +1,53 @@
-(ns dict.core
-  #_(:require [clojure.core :refer [def atom reset! get for first second]]))
+(ns dict.core)
 
-(def dictionary
-  {:en {"hello" "Hallo" "bonjour" "ahoj"}
-   :de {"Hallo" "hello" "bonjour" "ahoj"}
-   :fr {"bonjour" "hello" "Hallo" "ahoj"}
-   :sk {"ahoj" "hello" "Hallo" "bonjour"}})
+(defn in?
+  "true if `sequence` contains `elem`. See (contains? (set sequence) elem)"
+  [sequence elem]
+  (boolean (some (fn [e] (= elem e)) sequence)))
+
+
+;; (def entry
+;;   {:fr ["un" "une"]
+;;    :en ["one" "an" "a" "the"]
+;;    :sk ["jedna" "jeden" "jedno" "raz"]
+;;    :de ["ein" "eins" "eine" "einen" "einer" "einem" "eines"]
+;;    })
+
+;; (def word "one")
+
+(def dict
+  [
+   ;; {:fr ["salut" "bonjour"]
+   ;;  :en ["hello" "hi"]
+   ;;  :sk ["ahoj" "čau" "nazdar"]
+   ;;  :de ["hallo" "hi"]}
+
+   {:fr ["un" "une"]
+    :en ["one" "an" "a" "the"]
+    :sk ["jedna" "jeden" "jedno" "raz"]
+    :de ["ein" "eins" "eine" "einen" "einer" "einem" "eines"]
+    }
+   ]
+  )
+
+(def dictionary dict)
+
+(defn entry-has-word
+  "
+  (entry-has-word entry word)
+  "
+  [entry word]
+  (when (some true? (map (fn [synonyms] (in? synonyms word)) (vals entry)))
+    entry))
+
+(defn find-translations
+  "
+  (find-translations dict word)
+  "
+  [dict word]
+  (keep
+   (fn [elem-hm]
+     (entry-has-word elem-hm word))
+   dict))
 
 (def input-word (atom ""))
-(def translations (atom []))
-
-(defn find-translations [word]
-  (let [results (for [[lang words] dictionary
-                      :when (contains? words word)]
-                  {lang (get words word)})]
-    (reset! translations results)))
-
-(defn search-word []
-  (find-translations @input-word))

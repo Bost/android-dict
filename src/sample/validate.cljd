@@ -3,7 +3,7 @@
   (:require ["package:flutter/material.dart" :as m]
             [cljd.flutter :as f]
             [cljd.string :as str]
-            [dict.core :refer [input-word translations search-word]]))
+            [dict.core :as d]))
 
 (def my-custom-form
   (let [form-key (#/(m/GlobalKey m/FormState))]
@@ -24,7 +24,7 @@
            (.showSnackBar
             scaffold-messenger
             (m/SnackBar .content
-                        (m/Text (str "Processing '" @input-word "'"))))
+                        (m/Text (str "Processing '" @d/input-word "'"))))
            nil))
        .child (m/Text "Submit"))])))
 
