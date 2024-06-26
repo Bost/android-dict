@@ -1,4 +1,4 @@
-(ns acme.dict
+(ns acme.wiktionary
   (:require ["dart:async" :refer [Future]]
             ["dart:core" :refer [print]]
             ["package:http/http.dart" :as http]
@@ -13,27 +13,31 @@
 
 (defn wiktionary-find-translations [doc kw-lang]
   ;; (print doc)
-  (if-let [element ((comp
-                     (fn [selector] (.querySelector doc selector))
-                     (fn [lang] (str "span[lang='" lang "'] a"))
-                     name)
-                    kw-lang)]
-    (do
+  (if-let [elements ((comp
+                      (fn [selector] (.querySelectorAll doc selector))
+                      (fn [lang] (str "span[lang='" lang "'] a"))
+                      name)
+                     kw-lang)]
+    (let [element (first elements)]
+      ;; (print (str "elements : " elements))
       ;; (print (str "(string? element) " (string? element)))
       ;; (print (str "element " element))
       ;; (print (str "(.-attributes element) " (.-attributes element)))
       ;; (print (str "(.-children element) " (.-children element)))
       ;; {kw-lang (.-nodes element)}
-      {kw-lang [(.-text element)]})
+      {kw-lang (mapv (fn [element] (.-text element)) elements)})
     nil))
 
 (defn wiktionary-translations [doc word]
   ((comp
-    (partial reduce into {:en [word]})
+    (partial reduce into {
+                          ;; :en [word]
+                          })
     (partial remove nil?)
     (partial map (partial wiktionary-find-translations doc))
     keys)
    {:de "German" :fr "French"
-    ;; :cs "Czech"
-    :sk "Slovak"}))
+    :cs "Czech"
+    :sk "Slovak"
+    :en "English"}))
 
