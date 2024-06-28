@@ -51,3 +51,4 @@
    dict))
 
 (def input-word (atom ""))
+(def uri (atom ""))

@@ -1,17 +1,18 @@
 (ns acme.main
-  (:require ["package:flutter/material.dart" :as m]
-            [cljd.flutter :as f]
-            [cljd.string :as str]
-            [dict.core :as d]
-            [acme.wiktionary :as wiki]
-            [acme.utils :as ut]
+  (:require
+   ["package:flutter/material.dart" :as m]
+   [cljd.flutter :as f]
+   [cljd.string :as str]
+   [dict.core :as d]
+   [acme.wiktionary :as wiki]
+   [acme.utils :as ut]
 
-            ["package:http/http.dart" :as http]
-            ["package:html/parser.dart" :as html-parser]
-            ["dart:core" :refer [print]]
-            ["dart:convert" :as c]
+   ["package:http/http.dart" :as http]
+   ["package:html/parser.dart" :as html-parser]
+   ["dart:core" :refer [print]]
+   ["dart:convert" :as c]
 
-            ))
+   ))
 
 (defn data-table [& {:keys [cols rows]}]
   (f/widget
@@ -43,7 +44,7 @@
    ))
 
 (defn fetch-translation? [word]
-  (and (not (clojure.string/blank? word))
+  (and (not (str/blank? word))
        (empty? (d/find-translations d/dictionary word))))
 
 (defn json-translation [kw word response-json]
@@ -81,13 +82,8 @@
    :watch [word d/input-word
            response
            (when (fetch-translation? word)
-             (let [uri
-                   #_"https://jsonplaceholder.typicode.com/albums/1"
-                   ;; "https://en.wiktionary.org/wiki/horse#Translations"
-                   (str "https://en.wiktionary.org/wiki/" word
-                        #_"#Translations")]
-               (print (str "http/get " uri " ..."))
-               (http/get (Uri/parse uri))))
+             (print (str "http/get " @d/uri " ..."))
+             (http/get (Uri/parse @d/uri)))
            ;; response-json-fr (response-json :fr word)
            ;; response-json-de (response-json :de word)
            ;; response-json-sk (response-json :sk word)
@@ -97,21 +93,25 @@
          (do
            ;; (print (str "(fetch-translation? word): " (fetch-translation? word)))
            (if (fetch-translation? word)
-             (if (clojure.string/blank? word)
+             (if (str/blank? word)
                (do
-                 (print (str "(clojure.string/blank? word): " (clojure.string/blank? word)))
+                 (print (str "(str/blank? word): " (str/blank? word)))
                  {})
                (do
-                 ;; (print (str "\n de: " (json-translation :de word response-json-de)
-                 ;;             "\n de: " (json-translation :fr word response-json-fr)
-                 ;;             "\n sk: " (json-translation :sk word response-json-sk)))
-                 (if-some [{sc .-statusCode body .-body} ^http/Response response]
+                 ;; (print
+                 ;;  (str "\n de: " (json-translation :de word response-json-de)
+                 ;;       "\n de: " (json-translation :fr word response-json-fr)
+                 ;;       "\n sk: " (json-translation :sk word response-json-sk)))
+                 (if-some [{sc .-statusCode body .-body}
+                           ^http/Response response]
                    (case sc
                      200
                      ((comp
-                       (fn [document] (wiki/wiktionary-translations document word)))
+                       (fn [document]
+                         (wiki/wiktionary-translations document word)))
                       (html-parser/parse body))
-                     {:err [(str "Couldn't fetch '" word "', status code: " sc)]}))))
+                     {:err
+                      [(str "Couldn't fetch '" word "', status code: " sc)]}))))
              (do
                ;; (print (str "results : " results))
                (first results))))]
@@ -124,50 +124,73 @@
        ["3" "c" "13" "hongkong"]
        ["4" "d" "11" "guangzhou"]
        ["5" "e" "10" "beijing"]])
-     ;; (m/Scaffold :onPressed (.hideCurrentSnackBar scaffold-messenger snackbar))
+     ;; (m/Scaffold :onPressed
+     ;;             (.hideCurrentSnackBar scaffold-messenger snackbar))
      )))
+
+(defn do-submit [form-key scaffold-messenger]
+  (when (.validate ^:async (.-currentState ^dynamic form-key))
+    (.showSnackBar
+     scaffold-messenger
+     (m/SnackBar
+      .content
+      (m/Text
+       (str "http/get " @d/uri " ...")
+       #_(str "Searching translations of '" @d/input-word "' ..."))))
+    nil))
+
+(defn text-field [form-key scaffold-messenger]
+  (f/widget
+   :managed [controller (m/TextEditingController)]
+   (m/TextFormField
+    .controller controller
+    ;; .initialValue "horse"
+    ;; .placeholder true
+    .decoration (m/InputDecoration
+                 ;; .icon (m/Icon m/Icons.person)
+                 ;; .labelText "label"
+                 ;; .contentPadding (m/EdgeInsets.all 16)
+                 .hintText "<Enter word here>"
+                 .suffixIcon (m/IconButton
+                              .onPressed (fn [] (.clear controller))
+                              .icon (m/Icon m.Icons/clear)))
+    .textAlign m/TextAlign.center
+    .validator
+    (fn [value]
+      (if (str/blank? value)
+        "Enter some word"
+        (do
+          (reset! d/input-word value)
+          (reset! d/uri
+                  ;; "https://jsonplaceholder.typicode.com/albums/1"
+                  ;; "https://en.wiktionary.org/wiki/horse#Translations"
+                  (str "https://en.wiktionary.org/wiki/" value
+                       #_"#Translations"))
+          nil)))
+    .onFieldSubmitted (fn [_] (do-submit form-key scaffold-messenger)))))
 
 (defn main
   []
   (let [form-key (#/(m/GlobalKey m/FormState))]
     (f/run
-      (m/MaterialApp
-       .title "Dict" .debugShowCheckedModeBanner false
-       .home
-       (m/SafeArea
-        .child
-        (m/Scaffold
-         .body
-         (f/widget
-          :get [m/ScaffoldMessenger]
-          (m/Form .key form-key)
-          (m/Padding .padding (m/EdgeInsets.all 16.0))
-          (m/Column .mainAxisAlignment m/MainAxisAlignment.start)
-          .children
-          [
-           (m/TextFormField
-            ;; .initialValue "horse"
-            ;; .placeholder true
-            .decoration (m/InputDecoration
-                         ;; .icon (m/Icon m/Icons.person)
-                         ;; .labelText "label"
-                         .hintText "<Enter word here>"
-                         ;; .contentPadding (m/EdgeInsets.all 16)
-                         )
-            .textAlign m/TextAlign.center
-            .validator (fn [value] (if (str/blank? value)
-                                     "Enter some word"
-                                     (do (reset! d/input-word value)
-                                         nil))))
-           (m/ElevatedButton
-            .onPressed
-            (fn []
-              (when (.validate (.-currentState form-key))
-                (.showSnackBar
-                 scaffold-messenger
-                 (m/SnackBar .content
-                             (m/Text (str "Searching translations of '" @d/input-word "' ..."))))
-                #_(m/Text (str "Processing '" @input-word "'"))
-                nil))
-            .child (m/Text "Translate"))
-           translation-results])))))))
+       (m/MaterialApp
+        .title "Dict" .debugShowCheckedModeBanner false
+        .home
+        (f/widget
+         (m/SafeArea
+          .child
+          (m/Scaffold
+           .body
+           (f/widget
+            :get [m/ScaffoldMessenger]
+            (m/Form .key form-key)
+            (m/Padding .padding (m/EdgeInsets.all 16.0))
+            (m/Column .mainAxisAlignment m/MainAxisAlignment.start)
+            .children
+            [
+             (text-field form-key scaffold-messenger)
+             (m/ElevatedButton
+              .onPressed (fn [] (do-submit form-key scaffold-messenger))
+              .child (m/Text "Translate"))
+             translation-results]))))))))
+
