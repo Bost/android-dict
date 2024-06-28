@@ -1,4 +1,4 @@
-(ns acme.utils
+(ns dict.utils
   "See https://github.com/weavejester/medley/blob/master/src/medley/core.cljc"
   (:require
    [clojure.string :as cstr]

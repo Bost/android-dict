@@ -1,4 +1,4 @@
-(ns acme.wiktionary
+(ns dict.wiktionary
   (:require ["dart:async" :refer [Future]]
             ["dart:core" :refer [print]]
             ["package:http/http.dart" :as http]

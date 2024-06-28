@@ -1,11 +1,11 @@
-(ns acme.main
+(ns dict.main
   (:require
    ["package:flutter/material.dart" :as m]
    [cljd.flutter :as f]
    [cljd.string :as str]
    [dict.core :as d]
-   [acme.wiktionary :as wiki]
-   [acme.utils :as ut]
+   [dict.wiktionary :as wiki]
+   [dict.utils :as ut]
 
    ["package:http/http.dart" :as http]
    ["package:html/parser.dart" :as html-parser]
