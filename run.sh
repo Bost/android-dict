@@ -1,4 +1,4 @@
-# cd ~/android && ln -s android-dict/run.sh 
+# cd ~/android && ln -s android-dict/run.sh
 
 # --preserve=REGEX       preserve environment variables matching REGEX
 #     --pure             supprime les variables d'environnement existantes

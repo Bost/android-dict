@@ -1,5 +1,3 @@
-;; cd ~/android && ln -s android-dict/manifest.scm
-
 ;; What follows is a "manifest" equivalent to the command line you gave.
 ;; You can store it in a file that you may then pass to any 'guix' command
 ;; that accepts a '--manifest' (or '-m') option.
@@ -36,6 +34,7 @@
  man
  ncurses
  node
+ nss
  python
  rsync
  rust-apps
@@ -50,7 +49,6 @@
  gl
  java-compression
  patool
- chromium
  ninja
  llvm
  ;; cmake ; guix has 3.25.1; 3.22.1-g37088a8 is installed by Android-Studio
@@ -81,15 +79,13 @@
    ncurses
    ;; version: 6.2.20210619
    ;; version: 5.9.20141206
-   
+
    ;; libzim ;; libz
    ;; libzen ;; libz
 
    patool ;; bz2
    lbzip2 ;; bz2
 
-   ungoogled-chromium
-   ;; chromium
    ninja
    clang
    ;; cmake ; guix has 3.25.1; 3.22.1-g37088a8 is installed by Android-Studio
@@ -105,7 +101,7 @@
 
 (define project-packages
   (list
-   qtwebglplugin
+   qtwebglplugin-5 ; corresponds to "qtwebglplugin"
    adb
    android-file-transfer
    android-make-stub
@@ -160,6 +156,8 @@
    ;; openjdk package removes javadoc libs, one has to use ONLY openjdk:jdk
    ;; https://github.com/clojure-emacs/orchard/issues/117#issuecomment-859987280
    ;; "openjdk@18:jdk"
+   ;; (list openjdk24 "jdk")
+   openjdk24
    ))
 
 (define project-manifest
@@ -172,7 +170,8 @@
   (list
    ;; ./heroku.clj needs babashka. Also `guix shell ...` contain
    ;; '--share=/usr/bin' so that shebang (aka hashbang) #!/bin/env/bb works
-   (@(bost gnu packages babashka) babashka)
+   ;; (@(bost gnu packages babashka) babashka)
+   (@(nongnu packages clojure) babashka)
    bash
 
    ;; 1. The `ls' from busybox is causing problems. However it is overshadowed
